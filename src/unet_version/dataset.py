@@ -9,7 +9,7 @@ class Dataset(torch.utils.data.Dataset):
         self.transform = transform
         #self.input_list = sorted(os.listdir(os.path.join(self.data_dir,'train')))
         #self.label_list = sorted(os.listdir(os.path.join(self.data_dir,'label')))
-        
+        self.mode = mode
         if mode == 'train':
             if image_type == 'gray':
                 self.input_list = np.load(data_dir+'/train_gray.npy')
@@ -21,11 +21,13 @@ class Dataset(torch.utils.data.Dataset):
                 self.input_list = np.load(data_dir+'/test_gray.npy')
             elif image_type == 'rgb':
                 self.input_list = np.load(data_dir+'/test_rgb.npy')
+            self.label_list = np.zeros_like(self.input_list)
                 
     def __len__(self):
         return len(self.input_list)
 
     def __getitem__(self, index):
+        
         input = self.input_list[index]
         label = self.label_list[index]
         
@@ -37,6 +39,7 @@ class Dataset(torch.utils.data.Dataset):
         if self.transform:
             data = self.transform(data)
         return data
+        
     
 class ToTensor(object):
     def __call__(self, data):
@@ -50,17 +53,21 @@ class ToTensor(object):
         return data
 
 class Normalization(object):
-    def __init__(self, mean=0.5, std=0.5):
+    def __init__(self, mean=0.5, std=0.5, mode='train'):
         self.mean = mean
         self.std = std
+        self.mode = mode
 
     def __call__(self, data):
+        
         label, input = data['label'], data['input']
 
         input = (input - self.mean) / self.std
+        label = (label - self.mean) / self.std
 
         data = {'label': label, 'input': input}
-
+        
+            
         return data
 
     

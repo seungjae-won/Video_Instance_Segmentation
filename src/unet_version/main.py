@@ -14,7 +14,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.functional as F
 import torch.autograd as autograd
 from model import *
-from util import *
+from utill import *
 import argparse
 from torch.autograd import Variable
 from train import *
