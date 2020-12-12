@@ -1,4 +1,6 @@
 import numpy as np
+import cv2
+
 
 # source
 # https://github.com/hanyoseob/pytorch-StarGAN/blob/master/utils.py
@@ -50,4 +52,11 @@ def Laplacian(direction_num, image):
 
     image = cv2.filter2D(image, -1, Laplacian_filter)
     
+    return image
+
+def morphology(kernel,fgbg,image):
+    
+    image = fgbg.apply(image)
+    image = cv2.morphologyEx(image,cv2.MORPH_OPEN,kernel)
+
     return image
