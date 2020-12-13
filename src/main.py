@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 
 
+
 # Parser 생성하기
 parser = argparse.ArgumentParser(description='Video change detection', 
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -20,6 +21,7 @@ parser.add_argument('--minDistance', default=7, type=int, dest='minDistance')
 parser.add_argument('--blockSize', default=7, type=int, dest='blockSize')
 parser.add_argument('--winSize', default=15, type=int, dest='winSize')
 parser.add_argument('--maxLevel', default=2, type=int, dest='maxLevel')
+parser.add_argument('--window_size', default=5, type=int, dest='window_size')
 
 PARSER = Parser(parser)
 
@@ -33,23 +35,40 @@ def main():
     
     unet_image_list  = os.listdir(ARGS.input_video_path_unet_version)
 
-    for i in range(len(unet_image_list)):
+    for i in range(len(unet_image_list)-1):
         
         unet_image = os.path.join(ARGS.input_video_path_unet_version,unet_image_list[i])
+        unet_image_2 = os.path.join(ARGS.input_video_path_unet_version,unet_image_list[i+1])
         morphology_image = os.path.join(ARGS.input_video_path_morphology_version,morphology_image_list[i])
         
         unet_image = pilimg.open(unet_image)
         unet_image = np.array(unet_image)
-        unet_image = Laplacian(ARGS.Laplacian_direction_num, unet_image)
+        
+        unet_image_2 = pilimg.open(unet_image_2)
+        unet_image_2 = np.array(unet_image_2)
+        
+        matching_result_past = window_search(ARGS.window_size, unet_image)
+        matching_result_present = window_search(ARGS.window_size, unet_image_2)
+
+        final_unet_image = object_classification(matching_result_past, matching_result_present, unet_image_2)
+        
+        #unet_image = Laplacian(ARGS.Laplacian_direction_num, unet_image)
+        
+        
+        
+        
         
         # feature 추출
-        p0 = cv2.goodFeaturesToTrack(unet_image, mask=None, 
-                                     maxCorners = ARGS.maxCorners, 
-                                     qualityLevel = ARGS.qualityLevel, 
-                                     minDistance = ARGS.minDistance, 
-                                     blockSize = ARGS.blockSize)          
+        # p0 = cv2.goodFeaturesToTrack(unet_image, mask=None, 
+        #                              maxCorners = ARGS.maxCorners, 
+        #                              qualityLevel = ARGS.qualityLevel, 
+        #                              minDistance = ARGS.minDistance, 
+        #                              blockSize = ARGS.blockSize)          
         
-        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, gray_img, p0, None, winSize  = (15,15), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+        # mask = np.zeros_like(unet_image)
+        # mask = cv2.line()
+        
+        #p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, gray_img, p0, None, winSize  = (15,15), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
         
         morphology_image = pilimg.open(morphology_image)
         morphology_image = np.array(morphology_image)

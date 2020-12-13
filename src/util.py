@@ -1,4 +1,5 @@
 import numpy as np
+import PIL.Image as pilimg
 import cv2
 
 
@@ -60,3 +61,60 @@ def morphology(kernel,fgbg,image):
     image = cv2.morphologyEx(image,cv2.MORPH_OPEN,kernel)
 
     return image
+
+def window_search(window_size, image):
+    image = np.array(image)
+    height = len(image)
+    width = len(image[0])
+
+    matching_result = []
+    
+    start = -1
+    end = -1
+    
+    for i in range(0,width,window_size):
+        
+        matching_start = False
+        
+        for j in range(0,height-window_size,window_size):
+            if matching(i,j,window_size,image):
+                matching_start = True
+                break
+                
+        
+        if i < (width-window_size):
+            if matching_start == False:
+                if start != -1:
+                    end = i
+                    matching_result.append([start,end])
+                    start = -1
+                    end = -1
+                else:
+                    continue
+            else:
+                if start == -1:
+                    start = i
+                else:
+                    continue
+        else:
+            if matching_start == True:
+                end = i
+                matching_result.append([start,end])
+                start = -1
+                end = -1
+            
+    return matching_result
+
+def matching(width,height, window_size, image):
+    count =0
+    for n in range(width,width+window_size):
+        for m in range(height,height+window_size):
+            if image[m][n] == 255:
+                count+=1
+    
+    if count >= (window_size*window_size//2):
+        return True
+    else:
+        return False
+    
+
