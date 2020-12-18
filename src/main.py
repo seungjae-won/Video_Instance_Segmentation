@@ -11,7 +11,7 @@ import cv2
 parser = argparse.ArgumentParser(description='Video change detection', 
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('--input_video_path_unet_version', default="C:/Users/wonseungjae/Desktop/rgb1", type=str, dest='input_video_path_unet_version')
+parser.add_argument('--input_video_path_unet_version', default="C:/Users/wonseungjae/Desktop/real_img", type=str, dest='input_video_path_unet_version')
 parser.add_argument('--input_video_path_morphology_version', default="C:/Users/wonseungjae/Google 드라이브/CV_practice_3/skating/skating/input", type=str, dest='input_video_path_morphology_version')
 parser.add_argument('--Laplacian_direction_num', default=4, type=int, dest='Laplacian_direction_num')
 parser.add_argument('--morphology_kernel_size', default=5, type=int, dest='morphology_kernel_size')
@@ -34,51 +34,40 @@ def main():
     fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
     
     unet_image_list  = os.listdir(ARGS.input_video_path_unet_version)
-
-    for i in range(len(unet_image_list)-1):
         
+    for i in range(len(unet_image_list)):
+    
         unet_image = os.path.join(ARGS.input_video_path_unet_version,unet_image_list[i])
-        unet_image_2 = os.path.join(ARGS.input_video_path_unet_version,unet_image_list[i+1])
-        morphology_image = os.path.join(ARGS.input_video_path_morphology_version,morphology_image_list[i])
+        # morphology_image = os.path.join(ARGS.input_video_path_morphology_version,morphology_image_list[i])
         
         unet_image = pilimg.open(unet_image)
         unet_image = np.array(unet_image)
-        
-        unet_image_2 = pilimg.open(unet_image_2)
-        unet_image_2 = np.array(unet_image_2)
-        
-        matching_result_past = window_search(ARGS.window_size, unet_image)
-        matching_result_present = window_search(ARGS.window_size, unet_image_2)
+   
+        matching_result = window_search(ARGS.window_size, unet_image)
 
-        final_unet_image = object_classification(matching_result_past, matching_result_present, unet_image_2)
+
+        if i == 0:
+            object_dict = {}
+    
+            for k in range(len(matching_result)):
+                
+                object_dict[k] = matching_result[k]
+                
+            unet_image = object_segment(object_dict, unet_image)    
+
+        else:
+            
+            object_dict = object_classification(object_dict, matching_result, unet_image)
+            unet_image = object_segment(object_dict, unet_image)
         
-        #unet_image = Laplacian(ARGS.Laplacian_direction_num, unet_image)
+        save_path = os.path.join("C:/Users/wonseungjae/Desktop/final_result", unet_image_list[i])
+        unet_image.save(save_path,'PNG')
         
-        
-        
-        
-        
-        # feature 추출
-        # p0 = cv2.goodFeaturesToTrack(unet_image, mask=None, 
-        #                              maxCorners = ARGS.maxCorners, 
-        #                              qualityLevel = ARGS.qualityLevel, 
-        #                              minDistance = ARGS.minDistance, 
-        #                              blockSize = ARGS.blockSize)          
-        
-        # mask = np.zeros_like(unet_image)
-        # mask = cv2.line()
-        
-        #p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, gray_img, p0, None, winSize  = (15,15), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
-        
-        morphology_image = pilimg.open(morphology_image)
-        morphology_image = np.array(morphology_image)
-        
-        morphology_image = Laplacian(ARGS.Laplacian_direction_num, morphology(kernel,fgbg,morphology_image))
-        
+        unet_image = np.array(unet_image)
         cv2.imshow('unet_object_edge_detection_results', unet_image)
-        cv2.imshow('morphology_object_edge_detection_results', morphology_image)
+        # cv2.imshow('morphology_object_edge_detection_results', morphology_image)
 
-        k = cv2.waitKey(10)
+        k = cv2.waitKey(1)
         
     cv2.destroyAllWindows()
     
