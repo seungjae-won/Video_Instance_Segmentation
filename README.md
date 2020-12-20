@@ -1,10 +1,6 @@
 # Video_Change_Detection
 
 
-## Morphology version
-
-
-
-
-
 ## UNet version
+
+<img src="final_result.gif" align="center" height="900" width="900" >
