@@ -1,4 +1,4 @@
-# Video_Change_Detection
+# Video_Instance_Segmentation
 
 #### *Delay of 3 seconds on the gif play
 
